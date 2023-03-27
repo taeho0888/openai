@@ -1,45 +1,45 @@
-from dotenv import load_dotenv
 import os
 import openai
-import requests
 from datetime import datetime
 
-# .env 파일 로드
-load_dotenv()
-
-openai.organization = "org-wQ10XrNn2gKCe2xI1QhDtWUZ"
+ROLE = "user"
 openai.api_key = os.getenv("OPENAI_API_KEY")
-openai.Model.list()
 
-# API 요청 보내기
-url = "https://api.openai.com/v1/chat/completions"
-headers = {
-    "Content-Type": "application/json",
-    "Authorization": f"Bearer {openai.api_key}",
-}
-
-
+message = list()
 while True:
     input_content = input("질문을 입력해주세요(나가기 : exit) : ")
-    if input_content == "exit":
-        break
 
-    data = {
-    "model": "gpt-3.5-turbo",
-    "messages": [{"role": "teacher", "content": input_content}],
-    }
+    if input_content == 'exit':
+        break
     
+    m = dict()
+    m['role'] = ROLE
+    m['content'] = input_content
+    message.append(m)
+
     start_time = datetime.now()
-    response = requests.post(url, headers=headers, json=data)
+
+    completion = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=message
+    )
+
     end_time = datetime.now()
     duration = end_time - start_time
 
-    response_json = response.json()
-    content = response_json["choices"][0]["message"]["content"]
+    gpt_content = completion.choices[0].message.content
+    gpt_role = completion.choices[0].message.role
+
+    m1 = dict()
+    m1['role'] = gpt_role
+    m1['content'] = gpt_content
+    message.append(m1)
+    
+    print(message)
 
     with open("response.txt", "a+") as f:
         f.write("\n\n[ USER ]\n")
         f.write(input_content)
         f.write("\n\n[ chatGPT ]\n")
-        f.write(content)
+        f.write(gpt_content)
         f.write(f"\n\n걸린 시간 : {duration.total_seconds()}초")
