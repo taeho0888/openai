@@ -10,7 +10,7 @@ pipenv install
 ```
 .env 파일 생성하고 api key 넣기
 ```
-OPENAI_API_KEY=<당신의 openai api key>
+OPENAI_API_KEY='당신의 openai api key'
 ```
 
 ## 실행
