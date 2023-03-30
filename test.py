@@ -2,44 +2,57 @@ import os
 import openai
 from datetime import datetime
 
-ROLE = "user"
-openai.api_key = os.getenv("OPENAI_API_KEY")
+class ChatBot:
+    ROLE = "user"
+    MODEL = "gpt-3.5-turbo"
 
-message = list()
-while True:
-    input_content = input("질문을 입력해주세요(나가기 : exit) : ")
+    def __init__(self):
+        self.openai = openai
+        self.openai.api_key = os.getenv("OPENAI_API_KEY")
+        self.messages = []
 
-    if input_content == 'exit':
-        break
-    
-    m = dict()
-    m['role'] = ROLE
-    m['content'] = input_content
-    message.append(m)
+    def ask_question(self, question):
+        message = {
+            'role': ChatBot.ROLE,
+            'content': question
+        }
+        self.messages.append(message)
+        return self.get_response()
 
-    start_time = datetime.now()
+    def get_response(self):
+        start_time = datetime.now()
+        completion = self.openai.ChatCompletion.create(
+            model=ChatBot.MODEL,
+            messages=self.messages
+        )
+        end_time = datetime.now()
+        duration = end_time - start_time
+        response = completion.choices[0].message
+        self.messages.append(dict(response))
+        print(response.content)
+        
+        return response.content, duration.total_seconds()
 
-    completion = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=message
-    )
+    def save_to_file(self, filename, question, response, duration):
+        with open(filename, "a+") as f:
+            f.write("\n\n[ USER ]\n")
+            f.write(question)
+            f.write("\n\n[ chatGPT ]\n")
+            f.write(response)
+            f.write(f"\n\n걸린 시간 : {duration}초")
 
-    end_time = datetime.now()
-    duration = end_time - start_time
+def main():
+    chat_bot = ChatBot()
 
-    gpt_content = completion.choices[0].message.content
-    gpt_role = completion.choices[0].message.role
+    while True:
+        input_content = input("질문을 입력해주세요(나가기 : exit) : ")
 
-    m1 = dict()
-    m1['role'] = gpt_role
-    m1['content'] = gpt_content
-    message.append(m1)
-    
-    print(message)
+        if input_content == 'exit':
+            break
 
-    with open("response.txt", "a+") as f:
-        f.write("\n\n[ USER ]\n")
-        f.write(input_content)
-        f.write("\n\n[ chatGPT ]\n")
-        f.write(gpt_content)
-        f.write(f"\n\n걸린 시간 : {duration.total_seconds()}초")
+        response, duration = chat_bot.ask_question(input_content)
+        chat_bot.save_to_file("response.txt", input_content, response, duration)
+        # print(response)
+
+if __name__ == '__main__':
+    main()
