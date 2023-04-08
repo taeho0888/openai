@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 openai = "*"
 aiohttp = "*"
+requests = "*"
+sseclient-py = "*"
 
 [dev-packages]
 
